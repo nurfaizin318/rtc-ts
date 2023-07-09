@@ -1,0 +1,24 @@
+.main-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+.video-stream{
+    flex: 2;
+    background-color: red;
+    padding: 0;
+    display: flex;
+}
+
+.chat-container{
+    flex:1;
+    background-color: blue;
+}
+
+.video{
+ width: 400px;
+ transform: rotateY(180deg);
+ -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+ -moz-transform:rotateY(180deg); /* Firefox */
+}
