@@ -1,12 +1,16 @@
 
 import socket from '../../Utils/Socket'
 import React, { useState, useRef } from 'react'
-import { useParams } from 'react-router-dom';
+import { useParams ,useLocation} from 'react-router-dom';
 
 import "./index.css"
 
 
 
+interface MessageList {
+    name: string,
+    message: string
+}
 
 interface InitData {
     room: string,
@@ -21,13 +25,15 @@ const Watch = () => {
     const { room } = useParams();
     const videoElement = useRef<HTMLVideoElement>(null)
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-    const [candidates,setCandidates] = useState([])
+    const [listMessage, setListMessage] = useState<MessageList[]>([])
+    const [message, setMessage] = useState<string>()
+    const location = useLocation();
     // const [sdp, setSdp] = useState<string>("")
 
-  
 
 
-    const createRemoteDescription = (sdp:string) => {
+
+    const createRemoteDescription = (sdp: string) => {
 
         const value = JSON.parse(sdp)
 
@@ -59,7 +65,7 @@ const Watch = () => {
                         peerConnectionRef.current.setLocalDescription(sdp);
                         let answer = JSON.stringify(sdp)
                         // setSdp(answer)
-                        socket.emit("answer",room,answer)
+                        socket.emit("answer", room, answer)
                     }
 
                     // text.current.value = JSON.stringify(sdp)
@@ -75,15 +81,15 @@ const Watch = () => {
     }
 
 
-    const addIceCandidate = (candidate:string) => {
+    const addIceCandidate = (candidate: string) => {
 
         // setelah melakukan riset ice candidate yang bisa membentuk koneksi adalah ice candidate yang pertama 
 
-        const candidateParse:RTCIceCandidate = JSON.parse(candidate)
+        const candidateParse: RTCIceCandidate = JSON.parse(candidate)
         if (peerConnectionRef.current) {
             peerConnectionRef.current.addIceCandidate(candidateParse)
                 .then(() => {
-                  
+
                     console.log("success ad ice candidate")
                 })
                 .catch((error) => {
@@ -91,52 +97,52 @@ const Watch = () => {
                 })
 
         }
-    
-      
+
+
 
     }
-
-
-      
-
-    React.useEffect(() => {
-
-           
-    socket.emit("watch",room)
 
 
     socket.on("message", (name: string, message: string) => {
         console.log(message)
 
 
-        // setListMessage([...listMessage, { name: name, message: message }])
+        setListMessage([...listMessage, { name: name, message: message }])
 
     })
 
-    socket.on("offer", (sdp: string) => {
-        
-        createRemoteDescription(sdp)
-        console.log("offer")
+    React.useEffect(() => {
 
-        // setListMessage([...listMessage, { name: name, message: message }])
+        setInitData({ name: location.state.name, room: location.state.room })
 
-    })
-
-    socket.on("room_not_found",()=>{
-        alert("room not found")
-    })
+        socket.emit("watch", room)
 
 
-    socket.on("ice_candidate",(candidate:string)=>{
-        addIceCandidate(candidate)
-   
-    })
+
+
+        socket.on("offer", (sdp: string) => {
+
+            createRemoteDescription(sdp)
+            console.log("offer")
+
+
+        })
+
+        socket.on("room_not_found", () => {
+            alert("room not found")
+        })
+
+
+        socket.on("ice_candidate", (candidate: string) => {
+            addIceCandidate(candidate)
+
+        })
         const configuration: RTCConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const peerConnection = new RTCPeerConnection(configuration);
 
         peerConnectionRef.current = peerConnection
 
-     
+
         peerConnection.ontrack = e => {
 
             console.log("ontrack", e.streams[0])
@@ -155,14 +161,14 @@ const Watch = () => {
 
         }
 
-     
+
 
         return () => {
             socket.off("watch");
-            socket.off("offer",createRemoteDescription);
+            socket.off("offer", createRemoteDescription);
             socket.off("message");
             socket.off("room_not_found");
-          };
+        };
 
 
 
@@ -180,14 +186,32 @@ const Watch = () => {
             </div>
             <div className="chat-container">
 
-                <div>
-                    {/* <textarea value={sdp} onChange={(e) => { setSdp(e.target.value) }} rows={15} style={{ width: 400 }} /> */}
-                    {/* <button onClick={createRemoteDescription}>create remote description</button>
-                    <button onClick={addIceCandidate}>ad candidate</button> */}
+               
+                    <div className="watch-chat-container">
+                        <div style={{ fontWeight: "bold", fontSize: "20px" }}>
+                            your name : {initData?.name}
+                            <p>
+                                room : {initData?.room}
+                            </p>
+
+                        </div>
+                        <div style={{ backgroundColor: "white", height: "80%", textAlign: "left", padding: "10px", borderRadius: 5 }}>
+                            {listMessage.map((data: MessageList, index: number) => {
+                                return (
+                                    <div key={index}>{data.name} : {data.message} </div>
+                                )
+                            })}
+                        </div>
+                        <div className='watch-chat-input'>
+                            <input style={{ width: "80%" }} placeholder="message" onChange={(e) => { setMessage(e.target.value) }}></input>
+                            <button onClick={() => { socket.emit("sendMessage", initData, message) }}>send</button>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
-        </div>
+      
     )
 }
 

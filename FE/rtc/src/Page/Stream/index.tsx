@@ -37,7 +37,7 @@ const Stream = () => {
 
     const getUserMedia = () => {
 
-  
+
 
         navigator.getUserMedia = (navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
@@ -45,35 +45,35 @@ const Stream = () => {
             navigator.msGetUserMedia);
 
 
-            const config = {
-                video: true,
-                audio: true
-            }
-            navigator.mediaDevices.getUserMedia(config)
-                .then(stream => {
+        const config = {
+            video: true,
+            audio: true
+        }
+        navigator.mediaDevices.getUserMedia(config)
+            .then(stream => {
 
 
-                    let video = videoElement.current
-                    video!.srcObject = stream
+                let video = videoElement.current
+                video!.srcObject = stream
 
 
-                    videoStream.current = stream
+                videoStream.current = stream
 
-                    video!.play()
-                })
-                .then(() => {
-                    console.log("add track success")
-                })
-                .catch(error => console.error("error", error));
+                video!.play()
+            })
+            .then(() => {
+                console.log("add track success")
+            })
+            .catch(error => console.error("error", error));
 
-    
+
 
     }
 
 
-   
 
-    const createOffer = async (toId:string) => {
+
+    const createOffer = async (toId: string) => {
 
         const configuration: RTCConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const peerConnection = new RTCPeerConnection(configuration);
@@ -81,13 +81,13 @@ const Stream = () => {
 
         peerConnectionRef.current = peerConnection
 
-       
-     
+
+
 
         if (videoStream.current) {
             try {
                 videoStream.current.getTracks().forEach(tracks => { peerConnection.addTrack(tracks, videoStream.current!) })
-       
+
             } catch (error) {
                 console.log(error)
             }
@@ -96,30 +96,30 @@ const Stream = () => {
         }
 
 
-        peerConnection.onconnectionstatechange = e =>{
+        peerConnection.onconnectionstatechange = e => {
             console.log(e)
         }
 
         peerConnection.onnegotiationneeded = async () => {
-          console.log("abc")
-          }
-          
+            console.log("abc")
+        }
 
-        peerConnection.onicecandidate = event =>{
+
+        peerConnection.onicecandidate = event => {
             const { candidate } = event;
             // Kirim ICE candidate ke pihak lain (misalnya, melalui WebSocket)
             if (candidate) {
                 // console.log(JSON.stringify(candidate))
-               return socket.emit("candidate",toId,JSON.stringify(candidate))
+                return socket.emit("candidate", toId, JSON.stringify(candidate))
             }
         }
 
-     
+
 
         const offerOptions: RTCOfferOptions = {
             offerToReceiveAudio: true,
             offerToReceiveVideo: true,
-    
+
         };
 
 
@@ -131,10 +131,10 @@ const Stream = () => {
 
                 setSdp(parseSDP)
                 if (peerConnectionRef.current) {
-                    peerConnectionRef!.current.setLocalDescription(sdp).then(()=>{
+                    peerConnectionRef!.current.setLocalDescription(sdp).then(() => {
                         console.log("sucess create local description")
                     });
-                    socket.emit("offer",toId,JSON.stringify(sdp))
+                    socket.emit("offer", toId, JSON.stringify(sdp))
                 }
 
 
@@ -150,8 +150,8 @@ const Stream = () => {
     }
 
 
-    const createRemoteDescription = (sdp:string) => {
-     
+    const createRemoteDescription = (sdp: string) => {
+
         let answer = JSON.parse(sdp)
         if (peerConnectionRef.current) {
             peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer))
@@ -168,7 +168,12 @@ const Stream = () => {
 
     }
 
- 
+
+    socket.on("message", (name: string, message: string) => {
+
+        setListMessage([...listMessage, { name: name, message: message }])
+
+    })
 
     useEffect(() => {
 
@@ -176,36 +181,32 @@ const Stream = () => {
 
         setInitData({ name: location.state.name, room: location.state.room })
 
-        socket.on("message", (name: string, message: string) => {
 
-            setListMessage([...listMessage, { name: name, message: message }])
-    
-        })
-    
+
         socket.on("watch", (fromId: string,) => {
-    
-          createOffer(fromId)
-    
+
+            createOffer(fromId)
+
         })
-    
+
         socket.on("answer", (sdp: string) => {
-    
+
             createRemoteDescription(sdp)
             console.log("answer")
-      
-          })
 
-    
-        
-       
-    
+        })
+
+
+
+
+
 
         return () => {
-            socket.off("watch",createOffer);
-            socket.off("answer",createRemoteDescription);
+            socket.off("watch", createOffer);
+            socket.off("answer", createRemoteDescription);
             socket.off("message");
             socket.off("room_not_found");
-          };
+        };
 
 
     }, [])
@@ -216,30 +217,29 @@ const Stream = () => {
     return (
 
         <div className="main-container">
-            <div className="video-stream">
+            <div className="stream-video-stream">
                 <video className="video" autoPlay ref={videoElement} />
             </div>
-            <div className="chat-container">
+            <div className="stream-chat-container">
+                <div style={{ fontWeight: "bold", fontSize: "20px" }}>
+                    your name : {initData?.name}
+                    <p>
+                        room : {initData?.room}
+                    </p>
 
-                <div>
-                    <textarea value={sdp} onChange={(e) => { setSdp(e.target.value) }} rows={15} style={{ width: 400 }} />
-                    {/* <button onClick={createRemoteDescription}>create remote description</button>
-                    <button onClick={createOffer}>createOfer</button> */}
                 </div>
-                {/* <div>
-            your name : {initData?.name}
-            room : {initData?.room}
-        </div> */}
-                {/* <div>
-            {listMessage.map((data : MessageList, index :number) => {
-                return (
-                    <div key={index}>{data.name} : {data.message} </div>
-                )
-            })}
-        </div>
+                <div style={{ backgroundColor: "white", height: "80%", textAlign: "left", padding: "10px", borderRadius: 5 }}>
+                    {listMessage.map((data: MessageList, index: number) => {
+                        return (
+                            <div key={index}>{data.name} : {data.message} </div>
+                        )
+                    })}
+                </div>
+                <div className='stream-chat-input'>
+                    <input style={{ width: "80%" }} placeholder="message" onChange={(e) => { setMessage(e.target.value) }}></input>
+                    <button onClick={() => { socket.emit("sendMessage", initData, message) }}>send</button>
+                </div>
 
-        <input placeholder="message" onChange={(e) => { setMessage(e.target.value) }}></input>
-        <button onClick={() => { socket.emit("sendMessage", initData, message) }}>send</button> */}
             </div>
         </div>
 

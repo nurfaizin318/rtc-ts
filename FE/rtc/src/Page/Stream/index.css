@@ -4,17 +4,26 @@
     width: 100vw;
 }
 
-.video-stream{
+.stream-video-stream{
     flex: 2;
-    background-color: red;
+    background-color: black;
     padding: 0;
     display: flex;
 }
 
-.chat-container{
+.stream-chat-container{
     flex:1;
-    background-color: blue;
+    background-color: green;
+    position: relative;
+    padding: 20px;
 }
+
+.stream-chat-input{
+    position: absolute;
+    bottom:10px;
+    /* background-color: yellow; */
+    width: 90%;
+} 
 
 .video{
  width: 400px;

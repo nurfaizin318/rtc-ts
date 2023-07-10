@@ -13,7 +13,10 @@
 
 .chat-container{
     flex:1;
-    background-color: blue;
+    background-color: white;
+    height: 100vh;
+    display: flex;
+    overflow-y: scroll;
 }
 
 .video{
@@ -22,3 +25,18 @@
  -webkit-transform:rotateY(180deg); /* Safari and Chrome */
  -moz-transform:rotateY(180deg); /* Firefox */
 }
+
+.watch-chat-container{
+    flex:1;
+    background-color: green;
+    position: relative;
+    padding: 20px;
+  
+}
+
+.watch-chat-input{
+    position: absolute;
+    bottom:10px;
+    /* background-color: yellow; */
+    width: 90%;
+} 
